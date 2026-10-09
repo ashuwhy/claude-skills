@@ -27,16 +27,23 @@ In `~/.claude.json`, set the server's `command` to `~/.local/bin/mcp-lazy` and m
 
 ## brand/
 
-The scripts behind one app's logo and store art. They draw that app's mark and read its repo layout, so they are reference implementations: read them for the method, copy the parts that fit, and change the drawing, paths and copy. Needs `rsvg-convert`, Pillow, fontTools (plus brotli and uharfbuzz for some) and headless Chrome.
+Two of these run on any app as they are:
+
+```
+python make_fonts.py Font-Variable.ttf --sets latin,greek --chars "₹" --pin wdth=100 --out web/src/app/fonts/font.woff2
+python make_versus.py candidates.json versus.png [--font Label.ttf]
+```
+
+`make_fonts.py` cuts a font to woff2 with Google's latin (or latin-ext, greek, maths) ranges plus any extra characters, axes kept unless pinned. `make_versus.py` takes two or three finalist icons (SVG or PNG, square or Android adaptive layers, plus an optional monochrome layer) and lays out the versus sheet. The format of `candidates.json` is in its docstring. `--help` on either lists the options.
+
+The rest are the scripts behind one app's logo and store art. They draw that app's mark and read its repo layout, so they are reference implementations: read them for the method, copy the parts that fit, and change the drawing, paths and copy. Needs `rsvg-convert`, Pillow, fontTools (plus brotli and uharfbuzz for some) and headless Chrome.
 
 | Script | Method worth reusing |
 |---|---|
 | `logo-prompts.md` | A shared image-model brief plus one line per concept |
 | `make_lockups.py` | Text outlined to SVG paths with HarfBuzz and fontTools; shared helpers the others import |
 | `make_round3.py` | Finalist marks redrawn as parameterised SVG |
-| `make_versus.py` | The versus sheet: masks, glance blur, themed icons, real pixel sizes |
 | `make_icons.py` | Every launcher, adaptive, monochrome, notification, splash, favicon and store icon from one drawing |
-| `make_fonts.py` | Variable fonts subset to woff2 for self-hosting |
 | `make_store.py` | Store screenshots and feature graphic as HTML frames rendered by headless Chrome |
 | `make_thumbnail.py` | Posters laid out for every crop the app makes |
 

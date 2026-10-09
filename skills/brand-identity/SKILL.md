@@ -7,7 +7,7 @@ description: Logo, app icon and store-art process - brief, image-model rounds, a
 
 The process below is the durable part. Image models, icon specs and store sizes change; check the current platform spec before rendering anything, and *(checked 2026-10)* marks the sizes most likely to move.
 
-Reference scripts live in `~/claude-skills/tools/brand/`: prompts, candidate drawing, the versus sheet, the asset renderer, font subsetting, store frames and posters. They were written for one app and draw its mark, so read them for the method and adapt rather than run them as-is. They need `rsvg-convert`, Pillow, fontTools and headless Chrome.
+Scripts live in `~/claude-skills/tools/brand/`. `make_versus.py` (the sheet in step 3) and `make_fonts.py` (step 5) run on any app as they are. The rest (prompts, candidate drawing, the asset renderer, store frames, posters) were written for one app and draw its mark, so read those for the method and adapt them. They need `rsvg-convert`, Pillow, fontTools and headless Chrome.
 
 ## 1. Brief
 
@@ -31,7 +31,7 @@ Done when: the brief fits one paragraph and each concept is one extra line.
 
 ## 3. Versus sheet
 
-Redraw the two or three finalists in code (SVG strings), then put them through what a launcher icon actually meets:
+Redraw the two or three finalists in code (SVG strings), then put them through what a launcher icon actually meets (`make_versus.py` does all of it from the SVGs):
 
 - the circle and squircle masks
 - a blurred "at a glance" view
