@@ -1,6 +1,6 @@
 import { AppState } from 'react-native';
 
-import { SERVICE_NAME, posthog, posthogHost, posthogToken } from './posthog';
+import { SERVICE_NAME, posthog, posthogHost, posthogToken, redact, redactAttributes } from './posthog';
 
 /**
  * PostHog's OTLP receiver accepts OTLP/JSON over a plain POST, so the exporter
@@ -12,7 +12,7 @@ import { SERVICE_NAME, posthog, posthogHost, posthogToken } from './posthog';
 const ENDPOINT = `${posthogHost}/i/v1/traces`;
 
 const FLUSH_INTERVAL_MS = 10_000;
-/** Beta traffic is 12 testers, so every trace is kept. Turn this down before a wider rollout. */
+/** Every trace kept, which suits a closed test. Turn this down before a wide rollout. */
 const SAMPLE_RATE = 1;
 const MAX_BATCH = 50;
 /** Spans held while offline. Oldest go first - a stale span is worth less than a fresh one. */
@@ -147,9 +147,8 @@ export function startSpan(
       // Wall clock for the start, monotonic for the length: a clock correction
       // mid-span would otherwise produce a negative duration.
       const durationMs = performance.now() - startMonotonicMs;
-      if (outcome?.error) {
-        attributes['error.message'] = errorMessage(outcome.error);
-      }
+      const failure = outcome?.error ? redact(errorMessage(outcome.error)) : undefined;
+      if (failure) attributes['error.message'] = failure;
 
       buffer.push({
         traceId,
@@ -159,8 +158,8 @@ export function startSpan(
         kind: KIND_CODE[options.kind ?? 'internal'],
         startTimeUnixNano: String(Math.round(startWallMs * 1e6)),
         endTimeUnixNano: String(Math.round((startWallMs + durationMs) * 1e6)),
-        attributes: toOtlpAttributes(attributes),
-        status: outcome?.error ? { code: 2, message: errorMessage(outcome.error) } : { code: 1 },
+        attributes: toOtlpAttributes(redactAttributes(attributes)),
+        status: failure ? { code: 2, message: failure } : { code: 1 },
       });
 
       if (buffer.length > MAX_BUFFER) buffer = buffer.slice(-MAX_BUFFER);

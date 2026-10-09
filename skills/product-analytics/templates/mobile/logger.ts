@@ -1,4 +1,4 @@
-import { posthog } from './posthog';
+import { posthog, redactAttributes } from './posthog';
 import { currentTraceContext, errorMessage } from './tracing';
 
 type Level = 'debug' | 'info' | 'warn' | 'error';
@@ -20,7 +20,7 @@ function emit(level: Level, message: string, attributes?: LogAttributes) {
   posthog?.captureLog({
     body: message,
     level,
-    attributes,
+    attributes: attributes && redactAttributes(attributes),
     trace_id: trace?.traceId,
     span_id: trace?.spanId,
   });

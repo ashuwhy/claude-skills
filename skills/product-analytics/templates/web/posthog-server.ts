@@ -1,6 +1,6 @@
 import { PostHog } from "posthog-node";
 
-import { redact } from "./redact";
+import { redact, redactAttributes } from "./redact";
 
 function getHost(): string {
   return process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
@@ -49,7 +49,9 @@ export async function captureServerException(
       ? error
       : new Error(typeof error === "string" ? error : JSON.stringify(error));
   thrown.message = redact(thrown.message);
+  // The stack's first line repeats the original message.
+  if (thrown.stack) thrown.stack = redact(thrown.stack);
 
-  await posthog.captureException(thrown, distinctId, properties);
+  await posthog.captureException(thrown, distinctId, properties && redactAttributes(properties));
   await posthog.flush();
 }

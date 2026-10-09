@@ -43,7 +43,7 @@ No name, email, phone or account identifier leaves the device, in any signal. In
 
 - **Person properties never expire.** Events and replays age out; person records stay. `identify()` sends the user id and coarse properties only, and the app and web calls reference each other so they stay in step.
 - An event needs to know that a thing happened and which kind, not who did it.
-- Exception messages carry whatever the user typed and sometimes tokens. Redact every message on both sides.
+- Exception messages carry whatever the user typed and sometimes tokens. Redact every string that leaves, on both sides: log bodies and attributes, span attributes and status messages, exception messages, stacks (the first line repeats the message) and properties. Attributes are where variable data is told to go, so they leak more than messages do. Paths go without the query string.
 
 ## Verifying
 

@@ -15,18 +15,29 @@ if (__DEV__ && !posthogToken) {
 // Logs and traces share this name, so one service row in PostHog covers both.
 export const SERVICE_NAME = 'app-mobile';
 
-// A user's name, account number or session token must never ride along in a log
-// body. The third pattern is an example ID shape (digits, letters, digits);
-// replace it with whatever identifiers this app's users have.
+// A user's email, account number or session token must never ride along in a log,
+// span or exception. The third pattern is an example ID shape (digits, letters,
+// digits); replace it with whatever identifiers this app's users have.
 const SECRETS = [
   /\b(?:access_token|refresh_token|apikey|api_key|authorization)=\S+/gi,
   /\bey[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+/g,
   /\b\d{4,}-?[A-Z]{0,3}\d{2,}\b/g,
+  /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,
 ];
 
 /** Twin of redact() in the web redact.ts - keep the lists level. */
 export function redact(text: string): string {
   return SECRETS.reduce((out, pattern) => out.replace(pattern, '[redacted]'), text);
+}
+
+/**
+ * redact() over every string value. Attributes are where variable data is meant
+ * to go, so they need it more than the message does.
+ */
+export function redactAttributes<T extends Record<string, unknown>>(attributes: T): T {
+  return Object.fromEntries(
+    Object.entries(attributes).map(([key, value]) => [key, typeof value === 'string' ? redact(value) : value]),
+  ) as T;
 }
 
 // Optional, like on web: a build without the token runs normally and sends nothing.

@@ -26,5 +26,7 @@ export const onRequestError: Instrumentation.onRequestError = async (error, requ
     }
   }
 
-  await captureServerException(error, distinctId, { path: request.path });
+  // request.path carries the query string, which can hold a search term or an
+  // OAuth code. Path only, as in the mobile tracedFetch.
+  await captureServerException(error, distinctId, { path: request.path.split("?")[0] });
 };

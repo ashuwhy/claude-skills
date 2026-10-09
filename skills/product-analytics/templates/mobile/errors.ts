@@ -1,4 +1,4 @@
-import { posthog, redact } from './posthog';
+import { posthog, redact, redactAttributes } from './posthog';
 import { currentTraceContext, errorMessage } from './tracing';
 
 type GlobalErrorHandler = (error: unknown, isFatal?: boolean) => void;
@@ -11,9 +11,8 @@ declare const ErrorUtils:
   | undefined;
 
 /**
- * Play Vitals sees none of this app's crashes - it only counts testers who turned
- * on Android's usage and diagnostics sharing, and across 19 days it returned zero
- * rows while the app was in daily use. PostHog is the only crash visibility here.
+ * Play Vitals only counts users who turned on Android's usage and diagnostics
+ * sharing, so with a small audience it shows nothing. This is the crash record.
  */
 export function captureException(error: unknown, attributes?: Record<string, string | number | boolean>) {
   if (!posthog) return;
@@ -21,9 +20,11 @@ export function captureException(error: unknown, attributes?: Record<string, str
   const trace = currentTraceContext();
   const thrown = error instanceof Error ? error : new Error(errorMessage(error));
   thrown.message = redact(thrown.message);
+  // The stack's first line repeats the original message.
+  if (thrown.stack) thrown.stack = redact(thrown.stack);
 
   posthog.captureException(thrown, {
-    ...attributes,
+    ...(attributes && redactAttributes(attributes)),
     ...(trace ? { trace_id: trace.traceId, span_id: trace.spanId } : {}),
   });
 }

@@ -1,7 +1,9 @@
 import { after } from "next/server";
 
+import { redact, redactAttributes } from "./redact";
+
 /**
- * Server half of the mobile app's tracing (apps/mobile/lib/tracing.ts). The app
+ * Server half of the mobile app's tracing (mobile tracing.ts). The app
  * sends a W3C traceparent; this continues that trace so one waterfall covers
  * the tap on the phone and the work on Vercel. Posted as OTLP/JSON, which
  * PostHog's receiver accepts directly - no OpenTelemetry packages involved.
@@ -86,8 +88,8 @@ export function startServerSpan(
                     kind: 2,
                     startTimeUnixNano: String(Math.round(startWallMs * 1e6)),
                     endTimeUnixNano: String(Math.round((startWallMs + durationMs) * 1e6)),
-                    attributes: toOtlpAttributes(spanAttributes),
-                    status: error ? { code: 2, message: error } : { code: 1 },
+                    attributes: toOtlpAttributes(redactAttributes(spanAttributes)),
+                    status: error ? { code: 2, message: redact(error) } : { code: 1 },
                   },
                 ],
               },
