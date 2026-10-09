@@ -1,0 +1,267 @@
+#!/usr/bin/python3
+"""Stand-in for a stdio MCP server that starts the real one only when a tool is called.
+
+    mcp-lazy <name> [--idle SECONDS] [--reauth ARG] -- <command> [args...]
+
+Claude Code starts every configured stdio server with each session, so three open
+sessions meant three copies of a 250 MB node server nobody was calling. This answers
+initialize and tools/list from a cache written the last time the real server ran,
+starts the server on the first other request, and stops it after --idle seconds
+(default 600) with nothing in flight. The first run has no cache, so it starts the
+server once to fill it.
+
+With --reauth, a failed tool call whose reply says invalid_grant runs `<command> ARG`
+(the server's own login, e.g. `google-docs-mcp auth`), opens the first https URL it
+prints in the browser, and restarts the server once that login exits cleanly so it
+reads the new token. google-docs needs this because its OAuth app is in Testing
+mode, where Google kills the refresh token 7 days after every login.
+"""
+
+import json
+import os
+import queue
+import re
+import subprocess
+import sys
+import threading
+import time
+
+CACHE_DIR = os.path.expanduser("~/.cache/mcp-lazy")
+INIT_ID = "mcp-lazy-init"
+TOOLS_ID = "mcp-lazy-tools"
+LOGIN_URL = re.compile(r"https://\S+")
+LOGIN_NOTE = ("mcp-lazy: the OAuth login expired, so the sign-in page is now open in the "
+              "browser. Click Allow there, then retry this call.")
+
+
+class Lazy:
+    def __init__(self, name, cmd, idle, reauth):
+        self.cache_path = os.path.join(CACHE_DIR, name + ".json")
+        self.cmd = cmd
+        self.idle = idle
+        self.reauth = reauth
+        self.login = None
+        self.login_url = None
+        self.login_opened = 0.0
+        self.child = None
+        self.client_init = None
+        self.in_flight = set()
+        self.last_used = time.monotonic()
+        self.internal = queue.Queue()
+        self.out_lock = threading.Lock()
+        self.lock = threading.Lock()
+        try:
+            with open(self.cache_path) as f:
+                self.cache = json.load(f)
+        except (OSError, ValueError):
+            self.cache = None
+
+    def send_client(self, msg):
+        line = json.dumps(msg, separators=(",", ":"))
+        with self.out_lock:
+            sys.stdout.write(line + "\n")
+            sys.stdout.flush()
+
+    def send_child(self, msg):
+        self.child.stdin.write(json.dumps(msg, separators=(",", ":")) + "\n")
+        self.child.stdin.flush()
+
+    def await_internal(self, want_id, timeout=60):
+        deadline = time.monotonic() + timeout
+        while True:
+            msg = self.internal.get(timeout=max(0.1, deadline - time.monotonic()))
+            if msg.get("id") == want_id:
+                return msg
+            if msg.get("exited"):
+                raise OSError("server exited during startup")
+
+    def start_child(self):
+        # A server stopped for idleness leaves its exit marker behind; drop it.
+        while not self.internal.empty():
+            self.internal.get_nowait()
+        self.child = subprocess.Popen(
+            self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1
+        )
+        threading.Thread(target=self.pump_child, args=(self.child,), daemon=True).start()
+        self.send_child({"jsonrpc": "2.0", "id": INIT_ID, "method": "initialize",
+                         "params": self.client_init})
+        try:
+            init = self.await_internal(INIT_ID)
+        except (queue.Empty, OSError):
+            self.child.kill()
+            self.child = None
+            raise
+        self.send_child({"jsonrpc": "2.0", "method": "notifications/initialized"})
+        self.send_child({"jsonrpc": "2.0", "id": TOOLS_ID, "method": "tools/list", "params": {}})
+        tools = self.await_internal(TOOLS_ID)
+        if "result" in init and "result" in tools:
+            self.cache = {"initialize": init["result"], "tools": tools["result"]}
+            os.makedirs(CACHE_DIR, exist_ok=True)
+            tmp = self.cache_path + ".tmp"
+            with open(tmp, "w") as f:
+                json.dump(self.cache, f)
+            os.replace(tmp, self.cache_path)
+
+    def pump_child(self, child):
+        for line in child.stdout:
+            try:
+                msg = json.loads(line)
+            except ValueError:
+                continue
+            if msg.get("id") in (INIT_ID, TOOLS_ID):
+                self.internal.put(msg)
+                continue
+            if "method" not in msg:
+                with self.lock:
+                    self.in_flight.discard(msg.get("id"))
+                    self.last_used = time.monotonic()
+                # Only failures count: reading a doc that mentions invalid_grant is fine.
+                failed = "error" in msg or msg.get("result", {}).get("isError")
+                if self.reauth and failed and "invalid_grant" in line:
+                    self.start_login()
+                    if "error" in msg:
+                        msg["error"]["message"] += ". " + LOGIN_NOTE
+                    else:
+                        msg["result"].setdefault("content", []).append(
+                            {"type": "text", "text": LOGIN_NOTE})
+            self.send_client(msg)
+        self.internal.put({"exited": True})
+        # The server died with requests outstanding; fail them rather than hang the session.
+        with self.lock:
+            orphans, self.in_flight = self.in_flight, set()
+            if self.child is child:
+                self.child = None
+        for rid in orphans:
+            self.send_client({"jsonrpc": "2.0", "id": rid,
+                              "error": {"code": -32603, "message": "MCP server exited"}})
+
+    def reap_idle(self):
+        while True:
+            time.sleep(15)
+            with self.lock:
+                child = self.child
+                quiet = time.monotonic() - self.last_used > self.idle
+                if not (child and quiet and not self.in_flight):
+                    continue
+                self.child = None
+            self.stop(child)
+
+    def stop(self, child):
+        child.stdin.close()
+        try:
+            child.wait(5)
+        except subprocess.TimeoutExpired:
+            child.kill()
+
+    def start_login(self):
+        with self.lock:
+            if self.login and self.login.poll() is None:
+                # Parallel calls fail together; one tab is enough, but reopen a closed one.
+                url = self.login_url
+                if not url or time.monotonic() - self.login_opened < 30:
+                    return
+            else:
+                url = None
+                self.login_url = None
+                self.login = subprocess.Popen(
+                    self.cmd + [self.reauth], stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                threading.Thread(target=self.watch_login, args=(self.login,), daemon=True).start()
+        if url:
+            self.open_login(url)
+
+    def open_login(self, url):
+        self.login_opened = time.monotonic()
+        subprocess.run(["open", url], stdout=subprocess.DEVNULL)
+
+    def watch_login(self, login):
+        # Unanswered after 10 minutes: free the callback port so a later failure can retry.
+        timer = threading.Timer(600, login.kill)
+        timer.start()
+        for line in login.stdout:
+            found = LOGIN_URL.search(line)
+            if found and self.login_url is None:
+                self.login_url = found.group(0)
+                self.open_login(self.login_url)
+        timer.cancel()
+        if login.wait() != 0:
+            return
+        # The running server still holds the dead token; the next call starts a fresh one.
+        with self.lock:
+            child, self.child = self.child, None
+        if child:
+            self.stop(child)
+
+    def forward(self, msg):
+        with self.lock:
+            self.last_used = time.monotonic()
+            running = self.child is not None
+            if "id" in msg and "method" in msg:
+                self.in_flight.add(msg["id"])
+        if not running:
+            self.start_child()
+        self.send_child(msg)
+
+    def handle(self, msg):
+        method = msg.get("method")
+        if method == "initialize":
+            self.client_init = msg.get("params", {})
+            if self.cache is None:
+                self.start_child()
+            self.send_client({"jsonrpc": "2.0", "id": msg["id"], "result": self.cache["initialize"]})
+        elif method == "notifications/initialized":
+            pass
+        elif method == "tools/list" and self.cache is not None:
+            self.send_client({"jsonrpc": "2.0", "id": msg["id"], "result": self.cache["tools"]})
+        elif method == "ping":
+            self.send_client({"jsonrpc": "2.0", "id": msg["id"], "result": {}})
+        elif method and method.startswith("notifications/") and self.child is None:
+            pass
+        elif self.client_init is None:
+            # Claude Code 2.1.285 probes with server/discover before initialize. Starting
+            # the server now would send it initialize with null params, which it drops
+            # without a reply, so answer as an initialize-only server and let the client
+            # fall back.
+            if "id" in msg:
+                self.send_client({"jsonrpc": "2.0", "id": msg["id"],
+                                  "error": {"code": -32601, "message": "Method not found"}})
+        else:
+            self.forward(msg)
+
+    def run(self):
+        threading.Thread(target=self.reap_idle, daemon=True).start()
+        for line in sys.stdin:
+            try:
+                msg = json.loads(line)
+            except ValueError:
+                continue
+            try:
+                self.handle(msg)
+            except (OSError, queue.Empty) as err:
+                if "id" in msg and "method" in msg:
+                    with self.lock:
+                        self.in_flight.discard(msg["id"])
+                    self.send_client({"jsonrpc": "2.0", "id": msg["id"], "error": {
+                        "code": -32603, "message": "could not start MCP server: %s" % err}})
+        if self.child:
+            self.child.kill()
+        if self.login:
+            self.login.kill()
+
+
+def main(argv):
+    if "--" not in argv or len(argv) < 4:
+        sys.exit("usage: mcp-lazy <name> [--idle SECONDS] [--reauth ARG] -- <command> [args...]")
+    split = argv.index("--")
+    opts, cmd = argv[1:split], argv[split + 1:]
+    idle = 600
+    if "--idle" in opts:
+        idle = int(opts[opts.index("--idle") + 1])
+    reauth = None
+    if "--reauth" in opts:
+        reauth = opts[opts.index("--reauth") + 1]
+    Lazy(opts[0], cmd, idle, reauth).run()
+
+
+if __name__ == "__main__":
+    main(sys.argv)
