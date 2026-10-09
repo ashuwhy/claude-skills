@@ -5,8 +5,15 @@ import { getSupabasePublicConfig } from '@/lib/env'
 import { supabaseSsrCookieOptions } from '@/lib/supabase/ssrCookie'
 
 // Lives in src/ beside app/. next build also finds this file at the
-// app root, but next dev (16.2) only looks here, so a root file gated
-// production while dev skipped the gate on every page and API route.
+// app root, but next dev only looks here (checked 2026-10), so a root file
+// gates production while dev skips the gate on every page and API route.
+
+// Whole segments only. startsWith('/login') also opens /login-as or
+// /loginTools, so a route added later under a name like that ships ungated.
+function under(pathname: string, prefix: string) {
+  return pathname === prefix || pathname.startsWith(prefix + '/')
+}
+
 export async function proxy(request: NextRequest) {
   let supabaseUrl: string
   let anonKey: string
@@ -42,12 +49,12 @@ export async function proxy(request: NextRequest) {
 
   // Runs on every navigation and prefetch. getClaims() verifies the JWT locally
   // against the ES256 key, where getUser() was a round trip to Supabase Auth
-  // before the role lookup could even start. Same change as apps/web/src/proxy.ts.
+  // before the role lookup could even start.
   const { data: claimsData } = await supabase.auth.getClaims()
   const userId = claimsData?.claims.sub ?? null
   const { pathname } = request.nextUrl
 
-  if (pathname.startsWith('/login') || pathname.startsWith('/api/auth')) {
+  if (under(pathname, '/login') || under(pathname, '/api/auth')) {
     return supabaseResponse
   }
 
@@ -56,7 +63,7 @@ export async function proxy(request: NextRequest) {
   // service-role key, and signing in with any Google account gives a session:
   // any signed-in user could write admin data. Every route below
   // /api is admin-only, so it is gated here with the pages.
-  const isApi = pathname.startsWith('/api')
+  const isApi = under(pathname, '/api')
 
   if (!userId) {
     if (isApi) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -69,7 +76,12 @@ export async function proxy(request: NextRequest) {
     return redirectResponse
   }
 
-  // Check admin role
+  // The role has to come from somewhere the user cannot write. With the usual
+  // "users can update own profile" policy, any signed-in user can PATCH their
+  // own role to admin unless protect_profile_role.sql has taken that column
+  // away. claims.app_metadata.role is the other safe source (only the service
+  // role writes it) and skips this query, but a revoked admin keeps access
+  // until their access token expires.
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')

@@ -25,6 +25,10 @@ Done when: for every table, I can say which roles can write and what each write 
 
 A session proves only that someone signed in; with open Google sign-in, anyone has one. An admin app writing with the service role must check the user's role on every API route, in the gate, with tests: 401 signed out, 403 wrong role. See `nextjs-web`.
 
+**The role the gate trusts must live where the user cannot write it.** RLS policies pick rows, not columns, so the common "users can update own profile" policy lets every user set their own `profiles.role` to admin with one REST call. Either take the column away with column grants ([templates/protect_profile_role.sql](templates/protect_profile_role.sql): revoke table-wide insert and update, grant back only the editable columns, so a later column fails closed), or read the role from `app_metadata` in the JWT, which only the service role writes and which costs no query, but a revoked role holds until the token expires.
+
+Done when: `has_column_privilege('authenticated', 'public.profiles', 'role', 'UPDATE')` is false, and a non-admin's PATCH of their own role gets `42501`.
+
 ## pg_cron fills the disk
 
 pg_cron logs every run to `cron.job_run_details` and never prunes it. A per-minute job writes 1440 rows a day. On a small instance that table can become most of the database, and its write IO can drain the disk IO budget until Postgres refuses connections.

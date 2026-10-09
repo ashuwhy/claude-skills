@@ -16,10 +16,12 @@ Every rule here is a default with its reason. Next.js renames and moves things b
 [templates/admin-proxy.ts](templates/admin-proxy.ts) is a working gate:
 - Pages: signed out goes to the login page.
 - API routes: 401 signed out, 403 wrong role, the OAuth callback left open. Every route that writes with the service role sits behind it, because a session alone proves nothing when anyone can sign in with Google.
+- Open paths match whole segments (`/login` or `/login/...`), never a bare `startsWith('/login')`, which also opens any later route whose name begins that way.
+- The role it checks has to be one the user cannot write. A `profiles.role` under an "update own profile" policy is self-service admin; `supabase-backend` has the fix.
 - Verify the JWT locally (`getClaims()` against the project's signing keys) rather than a round trip to the auth server on every navigation and prefetch. Keep the round trip (`getUser()`) for writes.
 - The matcher excludes public files **by name**. Matching everything sends a signed-out request for the login page's own logo to the login page.
 
-Tests: signed out 401, each wrong role 403, the right role through, public paths open. Write them so they fail against a gate that does not run.
+Tests: signed out 401, each wrong role 403, the right role through, public paths open, and a look-alike path such as `/login-x` gated. Write them so they fail against a gate that does not run.
 
 Done when: the gate tests pass and a signed-out `curl` against `next dev` gets the redirect.
 
