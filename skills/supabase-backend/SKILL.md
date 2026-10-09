@@ -14,9 +14,10 @@ Schema, policies and catalogue content live in migrations in the repo, applied w
 An RLS insert policy that checks only `auth.uid() = user_id` proves who owns the row and nothing else. On a table that grants access or records money, anyone holding the public anon key can write themselves a row without opening the app.
 
 - Writes that grant access or record money never go through a client policy. Drop those insert and update policies and route the write through a function.
-- [templates/free_enrollment.sql](templates/free_enrollment.sql) is the pattern: `SECURITY DEFINER`, `set search_path`, checks `auth.uid()`, checks the target is active, inserts at amount 0, `ON CONFLICT DO NOTHING` returning the existing row so it can never overwrite a real payment, `revoke` from `public` and `anon`, `grant` to `authenticated`.
+- [templates/free_enrollment.sql](templates/free_enrollment.sql) is the pattern: `SECURITY DEFINER`, an empty `search_path` with every name schema-qualified, checks `auth.uid()`, checks the target is active **and priced at 0**, inserts at amount 0, `ON CONFLICT DO NOTHING` returning the existing row so it can never overwrite a real payment, `revoke` from `public` and `anon`, `grant` to `authenticated`.
 - Verify after push: anon gets `42501` from the function, and no non-service role keeps an insert policy on the table.
 - Paid writes come from the server with the service role, after verifying the payment provider's signature.
+- A free path that ignores price is a free-everything button. Gate it on price in the function, so a free beta is prices set to 0 in data and turning payments on needs no migration.
 
 Done when: for every table, I can say which roles can write and what each write proves.
 

@@ -3,6 +3,11 @@
 --
 -- A closed test where every paid item shows "coming soon" gets testers who
 -- never reach the product, so enroll_free_course grants it at amount 0.
+-- It only grants items whose price is 0. For a free beta, set the prices to 0
+-- in the database; when payments start, restoring the prices is enough, and
+-- this function refuses the paid items without a migration. A version that
+-- ignores price stays a free-everything button for anyone signed in, and is
+-- easy to forget once checkout ships.
 --
 -- The policies dropped below are the reason this is a function and not a plain
 -- client insert. "Users can insert own purchases" checked only that the row
@@ -20,7 +25,7 @@ CREATE OR REPLACE FUNCTION public.enroll_free_course(p_course_id uuid)
 RETURNS public.purchases
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 DECLARE
   v_purchase public.purchases;
@@ -30,7 +35,8 @@ BEGIN
   END IF;
 
   IF NOT EXISTS (
-    SELECT 1 FROM public.courses WHERE id = p_course_id AND is_active
+    SELECT 1 FROM public.courses
+    WHERE id = p_course_id AND is_active AND COALESCE(price, 0) = 0
   ) THEN
     RAISE EXCEPTION 'course not available' USING ERRCODE = '22023';
   END IF;
