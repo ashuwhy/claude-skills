@@ -10,6 +10,12 @@ starts the server on the first other request, and stops it after --idle seconds
 (default 600) with nothing in flight. The first run has no cache, so it starts the
 server once to fill it.
 
+The cache belongs to one command, and a file that command names (the server's entry
+script) being newer means a rebuild or upgrade, so either change starts the server
+at initialize to refill it. A change no named file shows still turns up when the
+server next starts: the new tool list replaces the cache and the client is sent
+tools/list_changed to refetch it.
+
 With --reauth, a failed tool call whose reply says invalid_grant runs `<command> ARG`
 (the server's own login, e.g. `google-docs-mcp auth`), opens the first https URL it
 prints in the browser, and restarts the server once that login exits cleanly so it
@@ -53,7 +59,13 @@ class Lazy:
         try:
             with open(self.cache_path) as f:
                 self.cache = json.load(f)
+            written = os.path.getmtime(self.cache_path)
         except (OSError, ValueError):
+            self.cache = None
+        # A cache from another command lists another server's tools, and one older than
+        # a file the command runs predates the last build or upgrade.
+        if self.cache and (self.cache.get("command") != cmd or any(
+                os.path.isfile(arg) and os.path.getmtime(arg) > written for arg in cmd)):
             self.cache = None
 
     def send_client(self, msg):
@@ -95,12 +107,15 @@ class Lazy:
         self.send_child({"jsonrpc": "2.0", "id": TOOLS_ID, "method": "tools/list", "params": {}})
         tools = self.await_internal(TOOLS_ID)
         if "result" in init and "result" in tools:
-            self.cache = {"initialize": init["result"], "tools": tools["result"]}
+            served = self.cache
+            self.cache = {"command": self.cmd, "initialize": init["result"], "tools": tools["result"]}
             os.makedirs(CACHE_DIR, exist_ok=True)
             tmp = self.cache_path + ".tmp"
             with open(tmp, "w") as f:
                 json.dump(self.cache, f)
             os.replace(tmp, self.cache_path)
+            if served and served["tools"] != self.cache["tools"]:
+                self.send_client({"jsonrpc": "2.0", "method": "notifications/tools/list_changed"})
 
     def pump_child(self, child):
         for line in child.stdout:
@@ -208,7 +223,10 @@ class Lazy:
             self.client_init = msg.get("params", {})
             if self.cache is None:
                 self.start_child()
-            self.send_client({"jsonrpc": "2.0", "id": msg["id"], "result": self.cache["initialize"]})
+            init = self.cache["initialize"]
+            # Claude Code only listens for list_changed from servers that declare it.
+            init.setdefault("capabilities", {}).setdefault("tools", {})["listChanged"] = True
+            self.send_client({"jsonrpc": "2.0", "id": msg["id"], "result": init})
         elif method == "notifications/initialized":
             pass
         elif method == "tools/list" and self.cache is not None:

@@ -23,7 +23,11 @@ A stand-in for a stdio MCP server: answers `initialize` and `tools/list` from a 
 mcp-lazy <name> [--idle SECONDS] [--reauth ARG] -- <command> [args...]
 ```
 
-In `~/.claude.json`, set the server's `command` to `~/.local/bin/mcp-lazy` and move the original command after `--`. After upgrading a wrapped server, delete `~/.cache/mcp-lazy/<name>.json` so the tool list is re-read. `install.sh` links it into `~/.local/bin`.
+In `~/.claude.json`, set the server's `command` to `~/.local/bin/mcp-lazy` and move the original command after `--`. `install.sh` links it into `~/.local/bin`.
+
+Upgrades and rebuilds need no cleanup. The cache in `~/.cache/mcp-lazy/<name>.json` is tied to the command after `--` and expires when a file that command names is newer than it, so the next session starts the server once and lists the new tools from its first message. A change no named file shows is caught the next time the server starts: mcp-lazy sends `tools/list_changed` and Claude Code refetches. The tools a session already loaded stay put until then, so a session that was open across a rebuild needs `/mcp` reconnect to see new parameters.
+
+Tests drive it against a stand-in server: `python3 -m unittest discover -s tools`.
 
 ## brand/
 
