@@ -29,16 +29,19 @@ Upgrades and rebuilds need no cleanup. The cache in `~/.cache/mcp-lazy/<name>.js
 
 Tests drive it against a stand-in server: `python3 -m unittest discover -s tools`.
 
-### Swapping google-docs for my gworkmcp fork
+### Replacing google-docs with my gworkmcp fork
 
 [gworkmcp](https://github.com/ashuwhy/gworkmcp) is my fork of `@a-bonus/google-docs-mcp`. It adds local-file attachments to Gmail `createDraft` and `updateDraft`, restricted to the folders listed in `GMAIL_ATTACHMENT_ROOTS`. It keeps upstream's login, token path (`~/.config/google-docs-mcp/token.json`) and scopes, so an existing sign-in carries over.
 
-1. Clone and build it. It isn't on npm, so the config points at the build.
+1. Remove upstream, then clone, build and install the fork. It isn't on npm. `npm install -g` on a folder links it instead of copying, so later rebuilds go live without reinstalling.
 
    ```
+   npm uninstall -g @a-bonus/google-docs-mcp
    git clone https://github.com/ashuwhy/gworkmcp.git
-   cd gworkmcp && npm ci && npm run build
+   cd gworkmcp && npm ci && npm run build && npm install -g .
    ```
+
+   That installs a `gworkmcp` command and keeps `google-docs-mcp` as an alias, so a session still running the old name starts this build instead of failing.
 
 2. Make the folder attachments may come from. While `GMAIL_ATTACHMENT_ROOTS` is unset, every attachment is refused.
 
@@ -46,26 +49,28 @@ Tests drive it against a stand-in server: `python3 -m unittest discover -s tools
    mkdir -p ~/gmail-outbox
    ```
 
-3. In `~/.claude.json`, keep the server named `google-docs` so tool names and permission rules stay the same. Replace the path after `--` with the build, and add the attachment root. Use absolute paths: the desktop app doesn't load nvm, so take `node` from `command -v node`. Leave the file at mode 600, since it holds the client secret.
+3. Replace the server entry in user config. Copy the client ID and secret from the old `google-docs` entry, then `claude mcp remove google-docs -s user` and `claude mcp add-json gworkmcp '<json>' -s user`. I use the CLI because running sessions also write `~/.claude.json`, and it keeps the file at mode 600. Use absolute paths: the desktop app doesn't load nvm, so take them from `command -v node` and `command -v gworkmcp`.
 
    ```json
-   "google-docs": {
+   {
+     "type": "stdio",
      "command": "/Users/<me>/.local/bin/mcp-lazy",
-     "args": ["google-docs", "--reauth", "auth", "--",
-              "/Users/<me>/.nvm/versions/node/v22.16.0/bin/node", "<clone>/dist/index.js"],
+     "args": ["gworkmcp", "--reauth", "auth", "--",
+              "/Users/<me>/.nvm/versions/node/v22.16.0/bin/node",
+              "/Users/<me>/.nvm/versions/node/v22.16.0/bin/gworkmcp"],
      "env": {
-       "GOOGLE_CLIENT_ID": "<unchanged>",
-       "GOOGLE_CLIENT_SECRET": "<unchanged>",
+       "GOOGLE_CLIENT_ID": "<from the old entry>",
+       "GOOGLE_CLIENT_SECRET": "<from the old entry>",
        "GMAIL_ATTACHMENT_ROOTS": "/Users/<me>/gmail-outbox"
      }
    }
    ```
 
-   Several roots are separated by `:`. Only files under them can be attached, and a root that contains the home folder (say `~` itself) is refused.
+   Several roots are separated by `:`. Only files under them can be attached, and a root that contains the home folder (say `~` itself) is refused. Tools are now named `mcp__gworkmcp__*`, so any permission rule naming `mcp__google-docs__` needs the new prefix.
 
-4. Start a new session. The command changed, so mcp-lazy starts the fork at once. `createDraft` should list an `attachments` parameter. If a call fails with `invalid_grant`, `--reauth auth` opens the Google sign-in; click Allow and retry.
+4. Start a new session. The server shows as `gworkmcp`, and `createDraft` lists an `attachments` parameter. If a call fails with `invalid_grant`, `--reauth auth` opens the Google sign-in; click Allow and retry. Sessions that were already open keep `google-docs` until they end.
 
-To update, `git pull && npm run build` in the clone, then open a new session. To go back to upstream, `npm i -g @a-bonus/google-docs-mcp`, put the path from `command -v google-docs-mcp` after `--`, and drop `GMAIL_ATTACHMENT_ROOTS`.
+To update, `git pull && npm run build` in the clone, then open a new session. To go back to upstream, `npm uninstall -g @ashuwhy/gworkmcp && npm i -g @a-bonus/google-docs-mcp`, put the path from `command -v google-docs-mcp` after `--`, and drop `GMAIL_ATTACHMENT_ROOTS`.
 
 ## brand/
 
