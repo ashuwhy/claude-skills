@@ -31,12 +31,12 @@ Tests drive it against a stand-in server: `python3 -m unittest discover -s tools
 
 ### Swapping google-docs for my gworkmcp fork
 
-[gworkmcp](https://github.com/ashuwhy/google-docs-mcp) is my fork of `@a-bonus/google-docs-mcp`. It adds local-file attachments to Gmail `createDraft` and `updateDraft`, restricted to the folders listed in `GMAIL_ATTACHMENT_ROOTS`. It keeps upstream's login, token path (`~/.config/google-docs-mcp/token.json`) and scopes, so an existing sign-in carries over.
+[gworkmcp](https://github.com/ashuwhy/gworkmcp) is my fork of `@a-bonus/google-docs-mcp`. It adds local-file attachments to Gmail `createDraft` and `updateDraft`, restricted to the folders listed in `GMAIL_ATTACHMENT_ROOTS`. It keeps upstream's login, token path (`~/.config/google-docs-mcp/token.json`) and scopes, so an existing sign-in carries over.
 
 1. Clone and build it. It isn't on npm, so the config points at the build.
 
    ```
-   git clone https://github.com/ashuwhy/google-docs-mcp.git gworkmcp
+   git clone https://github.com/ashuwhy/gworkmcp.git
    cd gworkmcp && npm ci && npm run build
    ```
 
