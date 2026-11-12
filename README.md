@@ -27,7 +27,7 @@ Each skill's `templates/` holds files to copy into a new app.
 ## Also here
 
 - `tools/`: `play.py` (Play Developer API CLI), `mcp-lazy` (lazy MCP server wrapper), `brand/` (logo and store-art scripts). See [tools/README.md](tools/README.md).
-- `lessons/`: dated incident logs, one line per incident with the rule it produced. History for when a rule needs re-judging; no skill loads them.
+- `lessons/`: dated incident logs, one line per incident with the rule it produced. History for when a rule needs re-judging; no skill loads them. The logs stay local, see [lessons/README.md](lessons/README.md).
 
 ## Install
 
@@ -43,3 +43,7 @@ Symlinks every skill into `~/.claude/skills` and `mcp-lazy` into `~/.local/bin`.
 - A new lesson: the durable rule goes in the skill with its reason; the dated story and numbers go in `lessons/`.
 - Nothing app-specific in a skill: no app names, user counts or one-off figures. Those belong in that app's repo.
 - Never commit secrets: service-account keys, `.env` files, tokens.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).

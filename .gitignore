@@ -7,3 +7,7 @@ service-account*.json
 __pycache__/
 *.pyc
 .DS_Store
+
+# Incident logs name live apps and the holes they had; they stay on this laptop.
+lessons/*
+!lessons/README.md
