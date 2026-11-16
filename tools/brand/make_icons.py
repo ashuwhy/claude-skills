@@ -15,9 +15,9 @@ from PIL import Image
 
 MOBILE = ROOT / "apps/mobile/assets/images"
 PLAY = ROOT / "docs/brand/lockups/play-icon.png"
-# WhatsApp and Facebook cache a preview by its URL, so a changed card needs a new name here
-# and in layout.tsx's openGraph and twitter images.
-SHARE = ROOT / "apps/web/public/og/parikshanam-mark-2026-11.png"
+# Chat apps cache a preview by its URL, so a changed card needs a new file name here and in the
+# page's og:image and twitter:image tags.
+SHARE = ROOT / "apps/web/public/og/share-card-2026-11.png"
 
 # Android draws the launcher at 72dp out of a 108dp canvas, so the foreground glyph is scaled
 # to sit where fit()'s 0.37 puts it on a full-size icon.
