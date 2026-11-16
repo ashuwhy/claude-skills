@@ -1,24 +1,36 @@
 #!/usr/bin/env bash
-# Links this repo's skills into ~/.claude/skills and mcp-lazy into ~/.local/bin.
+# Links this repo's skills into ~/.claude/skills (every Claude account) and ~/.agents/skills
+# (Codex, Gemini CLI, opencode, Cursor and other agents that read the shared folder), and
+# mcp-lazy into ~/.local/bin.
 # Never replaces something it did not create, except an mcp-lazy byte-identical to ours.
 set -euo pipefail
 
 repo="$(cd "$(dirname "$0")" && pwd)"
-skills_dir="$HOME/.claude/skills"
 bin_dir="$HOME/.local/bin"
-mkdir -p "$skills_dir" "$bin_dir"
+mkdir -p "$bin_dir"
 
-for skill in "$repo"/skills/*/; do
-  name="$(basename "$skill")"
-  target="$skills_dir/$name"
-  if [ -L "$target" ] && [ "$(readlink "$target")" = "${skill%/}" ]; then
-    echo "ok       $name"
-  elif [ -e "$target" ] || [ -L "$target" ]; then
-    echo "skipped  $name: $target already exists"
-  else
-    ln -s "${skill%/}" "$target"
-    echo "linked   $name"
-  fi
+# Each ~/.claude-account* config dir shares the default account's skills folder.
+for account in "$HOME"/.claude-account*/; do
+  [ -d "$account" ] || continue
+  if [ -e "${account}skills" ] || [ -L "${account}skills" ]; then continue; fi
+  ln -s "$HOME/.claude/skills" "${account}skills"
+  echo "linked   ${account}skills"
+done
+
+for skills_dir in "$HOME/.claude/skills" "$HOME/.agents/skills"; do
+  mkdir -p "$skills_dir"
+  for skill in "$repo"/skills/*/; do
+    name="$(basename "$skill")"
+    target="$skills_dir/$name"
+    if [ -L "$target" ] && [ "$(readlink "$target")" = "${skill%/}" ]; then
+      echo "ok       $name  ($skills_dir)"
+    elif [ -e "$target" ] || [ -L "$target" ]; then
+      echo "skipped  $name: $target already exists"
+    else
+      ln -s "${skill%/}" "$target"
+      echo "linked   $name  ($skills_dir)"
+    fi
+  done
 done
 
 lazy="$bin_dir/mcp-lazy"
