@@ -15,10 +15,10 @@ One shared brief pasted ahead of every concept (`tools/brand/logo-prompts.md` is
 
 - where it will be used (launcher icon, store listing), so it must read at 48px and survive as a one-colour silhouette
 - flat vector, solid shapes, no gradients, shadows, 3D, texture or text
-- the exact palette as hex, and "nothing else"
+- the palette as a ground plus one or two inks, each hex with its role ([web-taste](../web-taste/SKILL.md), The profile), and "nothing else"
 - one centred mark on a rounded-square tile
 - several variations in a grid per run, so a run explores a concept instead of betting on one render
-- a ban list of the category's clichés
+- a ban list: the category's clichés, plus the rows of web-taste's tells table that can turn up in a mark
 
 Done when: the brief fits one paragraph and each concept is one extra line.
 
@@ -47,9 +47,17 @@ Done when: one candidate wins on the sheet and I can say in a sentence why.
 
 The winner becomes a function with parameters (colours, detail on or off below a size). One script renders every asset from it; [icon-assets.md](icon-assets.md) has the matrix and the rule behind each size. In the app, draw the mark with a component from the same numbers rather than shipping PNGs, so it is sharp at every size and can flip colour in dark mode.
 
+The web surfaces come from the same function: the favicon, the web manifest (name, `theme_color` and `background_color` set to the ground) and the link-preview card. A change to the mark lands in all of them in one commit, and I check them side by side with the app icon ([web-taste](../web-taste/SKILL.md), Done when).
+
 Then a logo kit (lockups and bare mark, light and dark, SVG and PNG) in the repo's docs, so nobody screenshots the app for a logo.
 
 ## 5. Type
+
+Pick the faces first:
+
+- Write each candidate's licence beside it. Only a face with a clear licence for the use ships; trial and demo files stay in the comparison.
+- Start away from the faces every agent picks (web-taste's tells table) and compare pairs on the real name and copy ([naming-a-taste](../web-taste/naming-a-taste.md), section 4).
+- Set the wordmark in the body sans or draw it as part of the mark, never a third family. It stays flat: no glow.
 
 Self-host fonts, subset to woff2 with fontTools (the scripts the product needs plus its currency and symbols), variable axes kept. A build that downloads fonts has a network dependency that can fail a deploy. *(checked 2026-10: `next/font/google` failed a Vercel build this way.)*
 

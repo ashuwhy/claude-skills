@@ -25,7 +25,7 @@ Choosing a look from references (boards, mock directions, a pick with the user) 
 
 ## Tells to find
 
-Walk the rendered page for these. Each row's right column is what goes there instead.
+Walk the rendered page for these.
 
 | Tell | Instead |
 |---|---|

@@ -12,6 +12,7 @@ Every asset an Android-first Expo app needs from one drawing, and the rule behin
 | Splash image | per splash config | The native splash contains the image in a square, so a non-square glyph renders smaller than the number. Match the JS overlay to the rendered size |
 | Favicon | 196 | Reduced-detail mark |
 | Web app icons | 512 | Manifest and Apple touch icon |
+| Link-preview card | 1200x630 *(checked 2026-11)* | The mark and name on the ground, rendered by the same script, never a screenshot |
 | Lockups | SVG | Mark plus wordmark, horizontal and stacked, light and dark |
 | Logo kit | SVG + PNG | Lockups, bare mark, square icon, a rounded icon for places that do not mask |
 | Store listing icon | 512 | RGB, no alpha. Uploaded separately (`play.py icon`) |

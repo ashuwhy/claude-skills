@@ -1,6 +1,6 @@
 # Naming a taste
 
-Liking something is not a brief. This turns a pile of references into a look the user picked, with a reason behind every choice. It worked on a site redesign in Nov 2026 and took the pick from an argument to six short questions.
+Liking something is not a brief. This turns a pile of references into a look the user picked, with a reason behind every choice. Done this way, the pick comes down to a handful of short questions instead of an argument.
 
 ## 1. Gather and board
 
