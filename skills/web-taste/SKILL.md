@@ -1,83 +1,79 @@
 ---
 name: web-taste
-description: Making web design read as made by a person - the list of AI tells to strip with a replacement for each, the taste profile to aim at, how to name a taste and pin it to evidence, and the numbers that check it. Use before designing or restyling a site, landing page, portfolio or tool UI, when a page looks generic or "AI-made", or when choosing fonts, colours, hover effects and layout.
+description: Web design that reads as made by a person - the taste profile to aim at, the AI tells to find and what replaces each, the numbers that check a page, and how to turn references into a named direction. Use when designing or restyling a site, landing page, portfolio or tool UI, when a page looks generic or AI-made, or when picking fonts, palette, hover or layout.
 ---
 
 # Web taste
 
-A page reads as AI-made when every choice is the first one a model reaches for. Each tell below is a default that shows up on thousands of pages, so the cost is not that it is ugly, it is that it is recognisable. Strip the tell, then put the one specific thing in its place. These are defaults with reasons; font and palette fashions turn over fast, so the named ones are *(checked 2026-11)*.
+A page reads as generated when every choice is the first one a model reaches for. The fix is never one trick. It is one specific idea, carried through every surface, with the defaults stripped out around it. These are my defaults with their reasons; font and palette fashions turn over fast, so the named ones are *(checked 2026-11)*.
 
-Mobile versions of the same tells are in [app-design](../app-design/SKILL.md). Logo and icon work is [brand-identity](../brand-identity/SKILL.md).
+Choosing a look from references (boards, mock directions, a pick with the user) is its own job: [naming-a-taste.md](naming-a-taste.md). Logos, favicons and fonts: [brand-identity](../brand-identity/SKILL.md). Mobile screens: [app-design](../app-design/SKILL.md).
 
-## Tells to strip, and what goes there instead
+## The profile
 
-| Tell | Why it reads as generated | Instead |
+- **One idea per page, repeated.** Name it in a sentence: a texture, a shape, an object. It is the background or the hero, never an effect attached to components. Nothing else moves as decoration.
+- **One object you can hold.** A card, a stamp, a cartridge, a sticker. Lean on it everywhere (gate, link preview, favicon) and add no second metaphor. One object may break the frame; that beats a centred card.
+- **Colour is a ground plus one or two inks.** Low chroma. About 60% ground and big surfaces, 30% structure (secondary text, rules, texture at rest), 10% accent for links, the one filled button per view, selection and state. The accent marks; it never decorates. Name each palette "ground + two inks" with a role per hex.
+- **The ground is a tinted near-black or a tinted light**, pulled toward the ink's hue, with one neutral family (warm or cool, not both). Text on a coloured ground is a darker or lighter shade of that hue.
+- **Two type families.** One sans for everything read, one mono for buttons and labels in caps. The wordmark is set in the sans or drawn as a mark, never a third face. About five sizes on one ratio, body lines near 65 characters, `text-wrap: balance` on headings.
+- **Placed type, once per page.** Words set round a subject, a boxed word on a hairline leader, a tiny tracked sign-off. Used once it is a composition; used on every section it is a template again.
+- **Labels carry data.** A date, a stack, a size, a live value. A label with nothing to say is cut.
+- **Texture sits under the threshold of reading** and quiets round copy. If it reacts to the cursor, that is the page's one interaction, and nothing else draws a trail.
+- **Real work, shown readable.** Real screenshots on a flat ground with a faint 1px outline in the text colour, so a light screenshot does not bleed into a dark page.
+- **Tools print their numbers.** Every control shows its label, current value, track and reset. No account to get the output; export as a choice of formats.
+- **Copy says it once.** One line, real names, real figures, plain hyphens. Specific button labels; an error says how to fix it.
+
+## Tells to find
+
+Walk the rendered page for these. Each row's right column is what goes there instead.
+
+| Tell | Instead |
+|---|---|
+| A chip of small caps over every heading, a grey line of subtext under it | The heading alone; a label only where it carries data |
+| A hover that follows the cursor: spotlight cards, buttons pulled toward the pointer, a glow | A plain state change, or the page's one interaction |
+| Readouts dressed as instruments: corner coordinates, signal strength, tick rulers, numbers with no source | A real value, or empty space |
+| The fonts every agent picks (Inter, Geist, Space Grotesk, DM Sans) with Instrument Serif or Fraunces as the flourish | A sans chosen for the subject, compared on the real name and copy |
+| Warm paper grounds by default; violet or blue glow; gradient headline text; neon | Ground plus inks, tinted |
+| Same-size cards three across, a card nested in a card, an icon in a rounded square over each heading, "01" above a rule | Shape from content: uneven widths, a list, spacing doing the grouping |
+| A big number with a tiny caption as the hero; headline left with a small paragraph pinned right | The one thing, said at full size |
+| Every section fading up the same way | Stage the hero; the rest arrives quietly or not at all |
+| `#000` or a neutral grey-black ground | Near-black tinted toward the ink |
+| Soft blurred shadows on everything, a coloured bar down one edge of a card | Flat surfaces, lighter surfaces for depth in dark mode |
+| Glitch, scrambled text, VHS lines, matrix rain, pastel blobs, wide techno display faces | The page's own texture, or none |
+| Three sentences doing one sentence's work, invented round numbers, placeholder company names | One line, true figures |
+
+Five or more on one page means the problem is upstream: there is no idea yet. Go to [naming-a-taste.md](naming-a-taste.md) instead of patching rows.
+
+## Where rules fight
+
+| Fight | Pick | Why |
 |---|---|---|
-| A small label chip above every heading, plus a one-line subtext under every heading | Same shape on every section is a template; the words say nothing | A label only when it carries data a visitor can use (a date, a stack, a file size). Otherwise the heading stands alone |
-| Spotlight cards that follow the cursor, magnetic buttons, a glow that tracks the pointer | The first hover a model writes, on every portfolio | One hover tied to the page's one idea (see below), or a plain colour change |
-| Fake HUD: corner readouts, tick rulers, coordinates and altitudes that mean nothing | Numbers with no source look like set dressing | Print a real number or print nothing. Tools show true values: label, value, reset, on every control |
-| The default type pairing: Inter, Geist, Space Grotesk or DM Sans with Instrument Serif or Fraunces as the "creative" serif | Everyone's fallback, so it reads as no choice | Pick the face from the subject, test two unusual candidates at real sizes, keep one. A single family used with weight and size contrast beats a safe pair |
-| Cream, sand or beige as the new neutral; purple or blue glow; gradient text; neon; pastel blobs | Warm neutrals are now the safe pick and glow is the older one; both are what a model emits unprompted | A ground plus one or two low-chroma inks (below) |
-| Three identical cards in a row, cards inside cards, a rounded icon tile over every heading, "01" over a rule, a hairline under every row | Structure by template, not by content | Let content set the shape: one wide item, one tall, uneven columns. Fewer containers; spacing does the grouping |
-| A hero-metric block, or a split header with a tiny explainer on the right | Dashboard furniture on a page that is not a dashboard | State the one thing in the hero at full size |
-| The same fade-up on every section | Motion that does not answer anything | Content that is already loaded stays still. Move things in response to a pointer or to carry meaning |
-| Pure `#000`, or a neutral grey-black, as the dark ground | Reads dead and flat | Tinted near-black, hue pulled toward the ink colour |
-| Grey text on a coloured ground, big blurred drop shadows, a coloured stripe down a card's left edge | All three are stock card styling | Text that is a tint of the ground's own hue; flat surfaces; a 1px inner outline instead of a shadow |
-| Copy that says it in three lines, em-dashes, round invented metrics, Acme and John Doe | The cadence is the fingerprint | One line. Plain hyphens. Real names and real figures, or leave the slot out |
-| Effects scattered over components, each with its own trick | No page-level idea, so no identity | One named motif (below) |
+| A living texture on every page vs. no decorative motion | The texture, if it is the page's one idea | It is the background, not something stuck on components |
+| Content still on load vs. a small entrance | One entrance: rise 8-12px and fade, staggered 30-80ms, hero only staged | The web has scroll; a mobile screen does not (app-design keeps entrances out) |
+| A narrow reading column vs. empty sides on ultrawide | Keep copy at 560-680px; give the width to the image, field and object | Text stays readable; the things that scale take the space |
+| Grain everywhere vs. grain lowering small-type contrast | Grain behind the HTML, never on top of text | Both hold |
+| A cursor effect vs. no cursor gimmicks | One, owned by the site, on fine pointers only | One is identity; several is a demo reel |
 
-If a page shows five of these, do not patch them one by one. Restart from the profile.
+## Motion
 
-## The taste profile
+Ease-out for entering and leaving, ease-in-out for moving on screen, never ease-in on interface. Press 100-160ms, tooltip about 160, dropdown about 200, drawers up to 500. Seen fifty times a day, it barely moves; seen once a session, it can take its time. Start from `scale(0.95)` and opacity 0, never `scale(0)`. Name properties instead of `transition: all`. Hover sits behind `(hover: hover) and (pointer: fine)`. Every animation is interruptible. Reduced motion gets fades without travel, a still texture, and no loops. Anything that moves by itself for over 5s beside content gets a pause control.
 
-Aim for this, in plain words, then check each point against a real example you can point at.
+## Measure it
 
-- **One idea per page, repeated.** A field of characters, a single curve of light, a grain. One tactile object, not two metaphors. At most one object that breaks the frame.
-- **Colour is a ground and one or two inks.** Low chroma, roughly 60% ground, 30% second surface, 10% accent. The accent marks something; it is never decoration. Name a palette as "ground + two inks" so it can be recalled and compared.
-- **Dark works when something is lit.** A dark page needs a lit face, a rim, a lit patch of cells in a visible share of the frame. Measured against a good dark reference, the floor was about 25% of cells printed and 10% lit; the share of black pixels is the wrong metric.
-- **Texture sits under the threshold of reading.** Noise about 8 luma over the ground, quiet behind text, waking under the cursor. A clear zone round copy. Grain that never stops, stepped at about 24 fps, mono.
-- **Small type placed by hand around a subject, used once per page.** Corners, a boxed word on a leader line, a tiny tracked sign-off. Used everywhere it becomes the template again. Handwriting only if it is a scan of the owner's own.
-- **Specificity over coverage.** A real screenshot on a flat ground with a 1px inner outline at about 10% of the text colour. Never a gradient behind it, never a stock device frame.
-- **Tools show their numbers.** Label, value, track and reset on every control; no account wall; export as format cards.
+A taste claim is a guess until it has a number from the rendered page:
 
-Motion, kept short: ease-out for enter and exit, interface motion under 300ms, and frequency sets the size (seen fifty times a day, barely moves). Reduced motion gets a gentler version, not none. Never `transition: all`, never `scale(0)`, and gate hover effects behind `@media (hover: hover)`.
+- **Contrast** after texture is on: 4.5:1 body, 3:1 large text and buttons. Print the ratios beside the palette.
+- **Printed and lit share** for dark or character-drawn frames. Cut the frame into width/160 square cells; a cell is printed when its brightest pixel clears the ground by about 14 luma, lit past about 90. Black-pixel share is the wrong metric. A picture with no copy (an intro, a hero image) wants roughly 25% printed and 10% lit, which is where the dark reference I liked sat. A page of words can sit near 5%, because the copy is what is lit.
+- **Texture strength**: marks about 8 luma over the ground read as felt, not seen. Grain is separate: a floor near 3 sd on the ground, rising toward 8 on lit areas. Check at real strength and at 5x boosted, so the pattern can be judged at all.
+- **Frame cost**: GPU and JS ms per frame at 1080, 4K and ultrawide, p50 and p95, against the 16.7ms budget.
+- **Tell count** from the table above. Zero.
 
-## Naming a taste
+These thresholds came from one dark site's research; treat them as starting points and re-derive them against the references for a new look. Report benchmark and live-site numbers separately.
 
-Liking a thing is not a brief. To make it one:
+## Done when
 
-1. Collect 20 to 40 frames or screenshots the user likes, and group them on boards (light, figures, dark, colour, type, objects, and one board of things they reject).
-2. Write the taste as a profile in plain words, a handful of sentences.
-3. Pin every claim to a frame. A claim with no frame behind it comes out.
-4. Look for what the frames share that has nothing else in common. Here five unrelated inputs turned out to share one curve of light; the user liked the shape, not the film it came from. Name that.
-5. Write the rulebook with a source in brackets on each rule.
-6. Where two rules fight, write the pick and the reason in a table, so the next decision is already made:
-
-| Rule A | Rule B | Pick | Reason |
-|---|---|---|---|
-| Quiet behind text | Visible texture | Texture, with a clear zone round copy | Both hold if the zone is real |
-
-7. Settle open choices with the user one question at a time, with a mock for each option, never a paragraph of options. A page of 16 mocked directions across the same 7 surfaces (home, index, detail, wallpaper, link preview, wide screen, phone) made the pick quick because the surfaces stayed fixed and only the direction changed.
-
-Every surface that shows the direction follows it. The link preview shows the same card the page shows, drawn from the same source; change one, change all in one commit, and look at them side by side before calling it done.
-
-## Measure, do not assert
-
-A taste claim that cannot be measured stays a guess. Take the number from the rendered page or frame:
-
-- Printed-cell share and lit-cell share per frame, for character or dither fields.
-- Luma standard deviation on the ground, and the luma gap between texture and ground (about 8, floor roughly 3 sd).
-- Gap and padding in px between a subject and its small type, between neighbouring components, and at both edges.
-- Contrast of text against its ground, after the texture is on.
-- Frame cost: GPU ms per frame and fps on a mid laptop and a budget phone, not the dev machine alone.
-- Count of the tells above left on the page. The target is zero.
-
-Report measured numbers from a benchmark page and from the live site separately, because they differ.
-
-## Before calling a page done
-
-1. Walk the tell table once, top to bottom, against the rendered page, not the code.
-2. Name the page's one idea in a sentence. If it takes two, one of them goes.
-3. Check every surface that carries the direction: page, preview card, favicon, wallpaper, phone.
-4. Run the measurements and write the numbers down.
-5. Read the copy aloud. Cut every line a visitor would skip.
+1. The page's one idea fits in one sentence.
+2. The tell table, walked against the rendered page at desktop, ultrawide and phone, finds nothing.
+3. Every surface that shows the look (page, link preview, favicon, manifest, social card) draws it from the same source, checked side by side.
+4. The numbers above are written down with the screen and date they were taken on.
+5. The copy, read aloud, has no line a visitor would skip.

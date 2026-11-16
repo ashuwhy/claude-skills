@@ -68,13 +68,7 @@ Draw the JS overlay identical to the native splash, then hand over with no fade.
 
 ## Tells to remove
 
-Screens read as generated when each choice is the first one a model reaches for. Cut these; the web version of the list, with the reasons and the taste profile to aim at, is in [web-taste](../web-taste/SKILL.md).
-
-- A small label above every heading and a subtext line under it. Keep a label only when it carries data.
-- Rows of three identical cards, cards in cards, a rounded icon tile over every heading.
-- The default font pair, a purple or blue glow, gradient text, and pure `#000` as the dark ground. Use a tinted near-black and one or two low-chroma inks.
-- Round invented figures and placeholder names. Real numbers or nothing.
-- One fade-up on every section. This is already ruled out by "Motion answers a touch".
+Screens read as generated when each choice is the first one a model reaches for. The list of tells and what replaces each lives in [web-taste](../web-taste/SKILL.md); on a phone the same rows apply, and entrances stay out per "Motion answers a touch".
 
 ## Copy
 
