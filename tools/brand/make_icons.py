@@ -1,6 +1,7 @@
 """Every shipped copy of the geometry-box P, rendered from the one drawing in make_round3.py:
 the app's launcher, adaptive, themed, notification and splash images, the three web favicons,
-the in-page icons, the website lockups, the bare P and the Play listing icon.
+the in-page icons, the website lockups, the bare P, the link-preview card and the Play listing
+icon.
 
 Run from the repo root: python docs/brand/make_icons.py
 """
@@ -8,12 +9,15 @@ Run from the repo root: python docs/brand/make_icons.py
 import io
 import subprocess
 
-from make_lockups import BORDER, NAVY, ORANGE, PAPER, ROOT, WM, doc, tile
+from make_lockups import BORDER, NAVY, ORANGE, PAPER, ROOT, WM, doc, place, tile
 from make_round3 import fit, geometry_box
 from PIL import Image
 
 MOBILE = ROOT / "apps/mobile/assets/images"
 PLAY = ROOT / "docs/brand/lockups/play-icon.png"
+# WhatsApp and Facebook cache a preview by its URL, so a changed card needs a new name here
+# and in layout.tsx's openGraph and twitter images.
+SHARE = ROOT / "apps/web/public/og/parikshanam-mark-2026-11.png"
 
 # Android draws the launcher at 72dp out of a 108dp canvas, so the foreground glyph is scaled
 # to sit where fit()'s 0.37 puts it on a full-size icon.
@@ -116,6 +120,19 @@ def stacked(ruler, ink, cap=100):
     return doc(advance, baseline + 0.02 * cap, mark + words)
 
 
+def share_card():
+    """The link preview: the sign-in pages' stacked logo on paper, 1200x630. WhatsApp shows it
+    as a square cut from the middle (secondhand, checked 2026-11), so the word is sized to sit
+    inside the centre 630 square with a margin, and the wide platforms get paper either side."""
+    width, height, margin = 1200, 630, 45
+    logo, logo_height = place(stacked(NAVY, NAVY), 0, 0, height - 2 * margin)
+    x, y = (width - height) / 2 + margin, (height - logo_height) / 2
+    logo = f'<g transform="translate({x:.2f} {y:.2f})">{logo}</g>'
+    png = subprocess.run(["rsvg-convert"], input=doc(width, height, logo, PAPER).encode(),
+                         capture_output=True, check=True).stdout
+    return Image.open(io.BytesIO(png)).convert("RGB")
+
+
 def main():
     square(FULL, 1024).convert("RGB").save(MOBILE / "icon.png")
     raster(doc(1024, 1024, fit(1024, 0, 0, FULL, ADAPTIVE)), 1024).save(
@@ -150,6 +167,8 @@ def main():
         (brand / "lockup-stacked.svg").write_text(stacked(NAVY, NAVY))
     mark, width = bare(NAVY, 560)
     (ROOT / "apps/web/public/brand/p.svg").write_text(doc(width, 560, mark))
+    SHARE.parent.mkdir(parents=True, exist_ok=True)
+    share_card().save(SHARE)
 
     # The finished logo for everything outside the code: decks, posters, social, print.
     # PNGs are transparent, so the on-dark ones look empty in a white preview.
