@@ -17,6 +17,7 @@ The skills are there to save time on the next app. A skill that forces an old wa
 | `play-production-access` | The closed test, testers, evidence and the production application |
 | `mobile-performance` | Budget-phone performance: tiers, cold start, lists, images, R8, Android rendering |
 | `app-design` | Motion, haptics, spacing, dark mode, tab bar, splash, components, copy |
+| `web-taste` | Web design that reads as human-made: AI tells to strip, the taste profile, naming a taste, measuring it |
 | `brand-identity` | Logo rounds, versus sheet, every icon from one drawing, fonts, store art |
 | `product-analytics` | Events, logs, traces and crashes in one PostHog project, no personal data |
 | `supabase-backend` | Policies, entitlement functions, cron upkeep, auth, Google sign-in |
